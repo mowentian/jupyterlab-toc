@@ -5,7 +5,8 @@ import {
   ILayoutRestorer,
   IMimeDocumentTracker,
   JupyterLab,
-  JupyterLabPlugin
+  JupyterFrontEnd,
+  JupyterFrontEndPlugin
 } from '@jupyterlab/application';
 
 import { IDocumentManager } from '@jupyterlab/docmanager';
@@ -32,7 +33,7 @@ import '../style/index.css';
 /**
  * Initialization data for the jupyterlab-toc extension.
  */
-const extension: JupyterLabPlugin<ITableOfContentsRegistry> = {
+const extension: JupyterFrontEndPlugin<ITableOfContentsRegistry> = {
   id: 'jupyterlab-toc',
   autoStart: true,
   provides: ITableOfContentsRegistry,
@@ -51,7 +52,7 @@ const extension: JupyterLabPlugin<ITableOfContentsRegistry> = {
  * Activate the ToC extension.
  */
 function activateTOC(
-  app: JupyterLab,
+  app: JupyterFrontEnd,
   docmanager: IDocumentManager,
   editorTracker: IEditorTracker,
   restorer: ILayoutRestorer,
@@ -59,6 +60,9 @@ function activateTOC(
   notebookTracker: INotebookTracker,
   rendermime: IRenderMimeRegistry
 ): ITableOfContentsRegistry {
+  if (!(app instanceof JupyterLab)) {
+    throw new Error(`toc app must be activated in JupyterLab.`);
+  }
   // Create the ToC widget.
   const toc = new TableOfContents({ docmanager, rendermime });
 
@@ -69,7 +73,7 @@ function activateTOC(
   toc.title.iconClass = 'jp-TableOfContents-icon jp-SideBar-tabIcon';
   toc.title.caption = 'Table of Contents';
   toc.id = 'table-of-contents';
-  app.shell.addToLeftArea(toc, { rank: 700 });
+  app.shell.add(toc, 'left', { rank: 700 });
 
   // Add the ToC widget to the application restorer.
   restorer.add(toc, 'juputerlab-toc');
@@ -119,7 +123,6 @@ function activateTOC(
     }
     toc.current = { widget, generator };
   });
-
   return registry;
 }
 export default extension;
